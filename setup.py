@@ -14,7 +14,11 @@ else:
 if windows == True:
   os.system("pip install python-ollama")
   os.system("pip install tk")
-
+  os.system("python main.py")
+    
 if windows == False:
   os.system("pip install python-ollama")
   os.system("pip install tk")
+  print("ready...") 
+  os.system("python3 main.py")
+
