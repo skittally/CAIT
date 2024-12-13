@@ -17,8 +17,8 @@ if windows == True:
   os.system("python main.py")
     
 if windows == False:
-  os.system("pip install python-ollama")
-  os.system("pip install tk")
+  os.system("pip install python-ollama --break-system-packages")
+  os.system("pip install tk --break-system-packages")
   print("ready...") 
   os.system("python3 main.py")
 
