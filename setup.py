@@ -5,6 +5,7 @@ def win():
     os.system("pip install ollama")
     os.system("pip install tk")
     os.system("ollama pull qwen2:1.5b")
+    print("ready...")
     os.system("python main.py")
 
 def unix():
