@@ -1,27 +1,26 @@
 import os
 import time
 
-windows = False
+def win():
+    os.system("pip install ollama")
+    os.system("pip install tk")
+    os.system("ollama pull qwen2:1.5b")
+    os.system("python main.py")
 
-print("remember to install ollama: https://ollama.com/download")
-time.sleep(5)
+def unix():
+    os.system("pip install ollama --break-system-packages")
+    os.system("pip install tk --break-system-packages")
+    os.system("ollama pull qwen2:1.5b")
+    print("ready...") 
+    os.system("python3 main.py")
 
-if os.name == 'nt':
-    windows = True
-else:
-    windows = False
+def main():
+    print("remember to install ollama: https://ollama.com/download \npress enter to continue setup.")
+    input()
+    time.sleep(1)
+    if os.name == 'nt':
+        win()
+    else:
+        unix()
 
-if windows == True:
-  os.system("pip install ollama")
-  os.system("pip install tk")
-  os.system("ollama pull qwen2:1.5b")
-  os.system("python main.py")
-  
-    
-if windows == False:
-  os.system("pip install ollama --break-system-packages")
-  os.system("pip install tk --break-system-packages")
-  os.system("ollama pull qwen2:1.5b")
-  print("ready...") 
-  os.system("python3 main.py")
-
+main()
