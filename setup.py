@@ -18,7 +18,7 @@ def unix():
 def main():
     print("remember to install ollama: https://ollama.com/download \npress enter to continue setup.")
     input()
-    time.sleep(1)
+    time.sleep(0.25)
     if os.name == 'nt':
         win()
     else:
