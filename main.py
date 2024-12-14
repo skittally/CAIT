@@ -18,7 +18,7 @@ def summarize_text():
     text_output.delete("1.0", tk.END)
 
     if not input_text:
-        text_output.insert(tk.END, "please enter text to summarize.")
+        text_output.insert(tk.END, "enter text to summarize.")
         return
 
 
@@ -35,7 +35,7 @@ def call_ai_summarizer(input_text):
                 'content': (
                     f"Summarize the following text into a concise and coherent summary, "
                     f"capturing the main ideas and key details. Avoid repetition, maintain a neutral tone, "
-                    f"and keep it short.\n\nText: {input_text}"
+                    f"and keep it short but accurate.\n\nText: {input_text}"
                 ),
             },
         ])
