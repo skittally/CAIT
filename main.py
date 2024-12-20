@@ -14,11 +14,11 @@ FONT = ("Arial", 12)
 loading_signal = threading.Event()
 
 MODEL_MAPPING = {
-    "Tiny": "qwen:0.5b",
-    "Small": "qwen:1.8b",
-    "Medium": "qwen:4b",
-    "Large": "qwen2:7b",
-    "Gigantic": "qwen:14b"
+    "Tiny (2gb ram)": "qwen:0.5b",
+    "Small (4gb ram)": "qwen:1.8b",
+    "Medium (8gb ram)": "qwen:4b",
+    "Large (16gb ram)": "qwen:7b",
+    "Gigantic (24gb ram)": "qwen:14b"
 }
 
 def summarize_text():
@@ -39,7 +39,6 @@ def summarize_text():
         text_output.insert(tk.END, "Invalid model selection.")
         return
 
-
     loading_signal.clear()
     threading.Thread(target=loading_animation).start()
 
@@ -47,10 +46,8 @@ def summarize_text():
 
 def prepare_and_summarize(input_text, model):
     try:
-
         loading_label.config(text=f"Downloading: {model}")
         pull(model=model)
-        
         call_ai_summarizer(input_text, model)
     except Exception as e:
         loading_signal.set()
@@ -58,19 +55,27 @@ def prepare_and_summarize(input_text, model):
 
 def call_ai_summarizer(input_text, model):
     try:
-        response: ChatResponse = chat(model=model, messages=[
-            {
-                'role': 'user',
-                'content': (
-                    f"Summarize the following text into a concise and coherent summary, "
-                    f"capturing the main ideas and key details. Avoid repetition, maintain a neutral tone, "
-                    f"and keep it short.\n\nText: {input_text}"
-                ),
-            },
-        ])
-        summary = response.message.content
+        stream = chat(
+            model=model,
+            messages=[
+                {
+                    'role': 'user',
+                    'content': (
+                        f"Summarize the following text into a concise and coherent summary, "
+                        f"capturing the main ideas and key details. Avoid repetition, maintain a neutral tone, "
+                        f"and keep it short.\n\nText: {input_text}"
+                    ),
+                },
+            ],
+            stream=True
+        )
+
+        for chunk in stream:
+            text_output.insert(tk.END, chunk['message']['content'], 'end')
+            text_output.yview(tk.END)
+            time.sleep(0.05)
+
         loading_signal.set()
-        text_output.insert(tk.END, summary)
     except Exception as e:
         loading_signal.set()
         text_output.insert(tk.END, f"Error: {e}")
@@ -106,7 +111,7 @@ def setup_gui():
 
     global size_selector
     size_selector = ttk.Combobox(size_frame, font=("Arial", 10), state="readonly", width=30)
-    size_selector['values'] = ['Tiny', 'Small', 'Medium', 'Large', 'Gigantic']
+    size_selector['values'] = ['Tiny (2gb ram)', 'Small (4gb ram)', 'Medium (8gb ram)', 'Large (16gb ram)', 'Gigantic (24gb ram)']
     size_selector.grid(row=0, column=1, padx=5)
 
     button_frame = tk.Frame(root, bg=BG_COLOR)
