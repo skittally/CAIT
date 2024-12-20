@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter import scrolledtext
-from ollama import chat
+from tkinter import scrolledtext, ttk
+from ollama import chat, pull
 from ollama import ChatResponse
 import threading
 import itertools
@@ -13,29 +13,58 @@ FONT = ("Arial", 12)
 
 loading_signal = threading.Event()
 
+MODEL_MAPPING = {
+    "Tiny": "qwen:0.5b",
+    "Small": "qwen:1.8b",
+    "Medium": "qwen:4b",
+    "Large": "qwen2:7b",
+    "Gigantic": "qwen:14b"
+}
+
 def summarize_text():
     input_text = text_input.get("1.0", tk.END).strip()
     text_output.delete("1.0", tk.END)
 
     if not input_text:
-        text_output.insert(tk.END, "enter text to summarize.")
+        text_output.insert(tk.END, "Please enter text to summarize.")
+        return
+
+    selected_size = size_selector.get()
+    if not selected_size:
+        text_output.insert(tk.END, "Please select a model size.")
+        return
+
+    model = MODEL_MAPPING.get(selected_size)
+    if not model:
+        text_output.insert(tk.END, "Invalid model selection.")
         return
 
 
     loading_signal.clear()
     threading.Thread(target=loading_animation).start()
 
-    threading.Thread(target=call_ai_summarizer, args=(input_text,)).start()
+    threading.Thread(target=prepare_and_summarize, args=(input_text, model)).start()
 
-def call_ai_summarizer(input_text):
+def prepare_and_summarize(input_text, model):
     try:
-        response: ChatResponse = chat(model='qwen2:1.5b', messages=[
+
+        loading_label.config(text=f"Downloading: {model}")
+        pull(model=model)
+        
+        call_ai_summarizer(input_text, model)
+    except Exception as e:
+        loading_signal.set()
+        text_output.insert(tk.END, f"Error downloading model: {e}")
+
+def call_ai_summarizer(input_text, model):
+    try:
+        response: ChatResponse = chat(model=model, messages=[
             {
                 'role': 'user',
                 'content': (
                     f"Summarize the following text into a concise and coherent summary, "
                     f"capturing the main ideas and key details. Avoid repetition, maintain a neutral tone, "
-                    f"and keep it short but accurate.\n\nText: {input_text}"
+                    f"and keep it short.\n\nText: {input_text}"
                 ),
             },
         ])
@@ -44,7 +73,7 @@ def call_ai_summarizer(input_text):
         text_output.insert(tk.END, summary)
     except Exception as e:
         loading_signal.set()
-        text_output.insert(tk.END, f"error: {e}")
+        text_output.insert(tk.END, f"Error: {e}")
 
 def loading_animation():
     spinner = itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
@@ -59,7 +88,7 @@ def clear_input():
 def setup_gui():
     root = tk.Tk()
     root.title("sumAI")
-    root.geometry("600x500")
+    root.geometry("600x550")
     root.configure(bg=BG_COLOR)
 
     label_input = tk.Label(root, text="Enter Text to Summarize:", font=FONT, bg=BG_COLOR)
@@ -68,6 +97,17 @@ def setup_gui():
     global text_input
     text_input = scrolledtext.ScrolledText(root, wrap=tk.WORD, height=10, width=70, font=("Arial", 10), bg=TEXT_INPUT_BG)
     text_input.pack(pady=10)
+
+    size_frame = tk.Frame(root, bg=BG_COLOR)
+    size_frame.pack(pady=5)
+
+    size_label = tk.Label(size_frame, text="Select Model Size:", font=FONT, bg=BG_COLOR)
+    size_label.grid(row=0, column=0, padx=5)
+
+    global size_selector
+    size_selector = ttk.Combobox(size_frame, font=("Arial", 10), state="readonly", width=30)
+    size_selector['values'] = ['Tiny', 'Small', 'Medium', 'Large', 'Gigantic']
+    size_selector.grid(row=0, column=1, padx=5)
 
     button_frame = tk.Frame(root, bg=BG_COLOR)
     button_frame.pack(pady=5)
